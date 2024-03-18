@@ -179,14 +179,14 @@ type ContextInterface interface {
 // in the workflow to cancel the execution.
 type Context struct {
 	context context.Context
-	cancel  context.CancelCauseFunc
+	cancel  context.CancelFunc
 	ContextInterface
 }
 
 // Cancel the execution.
 // `nil` means no reason, but it is strongly recommended not to do this.
-func (d *Context) Cancel(cause error) {
-	d.cancel(cause)
+func (d *Context) Cancel(error) {
+	d.cancel()
 }
 
 // Loggers represents the loggers for the workflow.
@@ -420,7 +420,7 @@ func (d *Workflow[TInput, TOutput]) BuildWorkflow(ctx context.Context) error {
 			}
 			// The sub-Context is derived here only to prevent other Contexts from being affected when the worker stops
 			// actively.
-			workerCtx, _ := context.WithCancelCause(ctx)
+			workerCtx, _ := context.WithCancel(ctx)
 			var work = func(t TransitInterface) (any, error) {
 				d.Log(ctx, LogEventTransitStart{LogEventTransit: LogEventTransit{transit: t}})
 				defer d.Log(ctx, LogEventTransitEnd{LogEventTransit: LogEventTransit{transit: t}})
@@ -479,7 +479,7 @@ func (d *Workflow[TInput, TOutput]) CloseWorkflow() {
 func (d *Workflow[TInput, TOutput]) Execute(root context.Context, input *TInput) *TOutput {
 	// The sub-context is introduced and has a cancellation handler, making it easy to terminate the entire process
 	// at any time.
-	ctx, cancel := context.WithCancelCause(root)
+	ctx, cancel := context.WithCancel(root)
 
 	// Record the context and cancellation handler, so they can be called at the appropriate time.
 	d.muContext.Lock()
