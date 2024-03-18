@@ -1,4 +1,4 @@
-module github.com/rhosocial/go-dag
+module github.com/chenpi12311/go-dag
 
 go 1.18
 
